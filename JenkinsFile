@@ -1,3 +1,4 @@
+#!/usr/bin/env groovy
 import hudson.model.*
 import hudson.EnvVars
 import groovy.json.JsonSlurperClassic
@@ -14,11 +15,14 @@ properties([
         booleanParam(defaultValue: true, description: 'Application Review  ', name: 'Review'),
         booleanParam(defaultValue: true, description: 'Application Test    ', name: 'Test'),
         booleanParam(defaultValue: true, description: 'Application Metrics ', name: 'Metrics'),
-        booleanParam(defaultValue: true, description: 'Application Package ', name: 'Package')
+        booleanParam(defaultValue: true, description: 'Application Package ', name: 'Package'),
+        booleanParam(defaultValue: false, description: 'Docker Image Build  ', name: 'DockerImageBuild'),
+        booleanParam(defaultValue: false, description: 'Docker Image Push   ', name: 'DockerImagePush')
         ])
     ])
 
     stage('Checkout'){
+        cleanWs()
         git 'https://github.com/rrahul4/DevOpsClassCodes'
     }        
     
@@ -63,5 +67,16 @@ properties([
             sh 'mvn package'
             }
         }        
+    }
+    
+    if (params.DockerImageBuild) {
+        stage('Docker Image Build') {
+            sh 'sudo docker build . -t rrahul4/addressbook:$BUILD_NUMBER'
+        }
+    }
+    if (params.DockerImagePush) {
+        stage('Docker Image Push') {
+            sh 'sudo docker push rrahul4/addressbook:$BUILD_NUMBER'
+        }
     }
 }
